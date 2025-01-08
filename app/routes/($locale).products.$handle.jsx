@@ -100,7 +100,14 @@ export default function Product() {
     selectedOrFirstAvailableVariant: selectedVariant,
   });
 
-  const {title, category} = product;
+  const {title, category, images} = product;
+
+  const selectedVariantsSecondaryImage = images.edges.filter((image) => {
+    if (!image.node?.altText) return false;
+    return image.node.altText.includes(selectedVariant.title.toLowerCase());
+  });
+
+  console.log(selectedVariantsSecondaryImage, selectedVariant.title);
 
   return (
     <div className="flex flex-col">
@@ -183,6 +190,19 @@ const PRODUCT_FRAGMENT = `#graphql
     description
     encodedVariantExistence
     encodedVariantAvailability
+    images(first: 10){
+      edges {
+        cursor
+        node {
+          __typename
+          id
+          url
+          altText
+          width
+          height
+        }
+      }
+    }
     options {
       name
       optionValues {
