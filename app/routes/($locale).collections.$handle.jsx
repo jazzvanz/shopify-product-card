@@ -113,6 +113,8 @@ export default function Collection() {
  */
 function ProductItem({product, loading}) {
   const variantUrl = useVariantUrl(product.handle);
+
+  console.log(product, variantUrl)
   return (
     <Link
       className="product-item"

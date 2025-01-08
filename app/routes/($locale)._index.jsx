@@ -54,8 +54,16 @@ function loadDeferredData({context}) {
       return null;
     });
 
+  const demoProducts = context.storefront
+    .query(DEMO_PRODUCTS_QUERY)
+    .catch((error) => {
+      console.error(error);
+      return null;
+    });
+
   return {
     recommendedProducts,
+    demoProducts,
   };
 }
 
@@ -66,6 +74,7 @@ export default function Homepage() {
     <div className="home">
       <FeaturedCollection collection={data.featuredCollection} />
       <RecommendedProducts products={data.recommendedProducts} />
+      <DemoProducts products={data.demoProducts} />
     </div>
   );
 }
@@ -102,6 +111,47 @@ function RecommendedProducts({products}) {
   return (
     <div className="recommended-products">
       <h2>Recommended Products</h2>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Await resolve={products}>
+          {(response) => (
+            <div className="recommended-products-grid">
+              {response
+                ? response.products.nodes.map((product) => (
+                    <Link
+                      key={product.id}
+                      className="recommended-product"
+                      to={`/products/${product.handle}`}
+                    >
+                      <Image
+                        data={product.images.nodes[0]}
+                        aspectRatio="1/1"
+                        sizes="(min-width: 45em) 20vw, 50vw"
+                      />
+                      <h4>{product.title}</h4>
+                      <small>
+                        <Money data={product.priceRange.minVariantPrice} />
+                      </small>
+                    </Link>
+                  ))
+                : null}
+            </div>
+          )}
+        </Await>
+      </Suspense>
+      <br />
+    </div>
+  );
+}
+
+/**
+ * @param {{
+ *   products: Promise<DemoProductsQuery | null>;
+ * }}
+ */
+function DemoProducts({products}) {
+  return (
+    <div className="recommended-products">
+      <h2>Demo Products</h2>
       <Suspense fallback={<div>Loading...</div>}>
         <Await resolve={products}>
           {(response) => (
@@ -188,8 +238,40 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
   }
 `;
 
+const DEMO_PRODUCTS_QUERY = `#graphql
+  fragment DemoProduct on Product {
+    id
+    title
+    handle
+    priceRange {
+      minVariantPrice {
+        amount
+        currencyCode
+      }
+    }
+    images(first: 1) {
+      nodes {
+        id
+        url
+        altText
+        width
+        height
+      }
+    }
+  }
+  query DemoProducts ($country: CountryCode, $language: LanguageCode)
+    @inContext(country: $country, language: $language) {
+    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
+      nodes {
+        ...DemoProduct
+      }
+    }
+  }
+`;
+
 /** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
 /** @template T @typedef {import('@remix-run/react').MetaFunction<T>} MetaFunction */
 /** @typedef {import('storefrontapi.generated').FeaturedCollectionFragment} FeaturedCollectionFragment */
 /** @typedef {import('storefrontapi.generated').RecommendedProductsQuery} RecommendedProductsQuery */
+/** @typedef {import('storefrontapi.generated').DemoProductsQuery} ProductsQuery */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */

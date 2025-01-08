@@ -359,6 +359,48 @@ export type RecommendedProductsQuery = {
   };
 };
 
+export type DemoProductFragment = Pick<
+  StorefrontAPI.Product,
+  'id' | 'title' | 'handle'
+> & {
+  priceRange: {
+    minVariantPrice: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
+  };
+  images: {
+    nodes: Array<
+      Pick<StorefrontAPI.Image, 'id' | 'url' | 'altText' | 'width' | 'height'>
+    >;
+  };
+};
+
+export type DemoProductsQueryVariables = StorefrontAPI.Exact<{
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+}>;
+
+export type DemoProductsQuery = {
+  products: {
+    nodes: Array<
+      Pick<StorefrontAPI.Product, 'id' | 'title' | 'handle'> & {
+        priceRange: {
+          minVariantPrice: Pick<
+            StorefrontAPI.MoneyV2,
+            'amount' | 'currencyCode'
+          >;
+        };
+        images: {
+          nodes: Array<
+            Pick<
+              StorefrontAPI.Image,
+              'id' | 'url' | 'altText' | 'width' | 'height'
+            >
+          >;
+        };
+      }
+    >;
+  };
+};
+
 export type ArticleQueryVariables = StorefrontAPI.Exact<{
   articleHandle: StorefrontAPI.Scalars['String']['input'];
   blogHandle: StorefrontAPI.Scalars['String']['input'];
@@ -576,48 +618,6 @@ export type StoreCollectionsQuery = {
     pageInfo: Pick<
       StorefrontAPI.PageInfo,
       'hasNextPage' | 'hasPreviousPage' | 'startCursor' | 'endCursor'
-    >;
-  };
-};
-
-export type CatalogQueryVariables = StorefrontAPI.Exact<{
-  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
-  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
-  last?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
-  startCursor?: StorefrontAPI.InputMaybe<
-    StorefrontAPI.Scalars['String']['input']
-  >;
-  endCursor?: StorefrontAPI.InputMaybe<
-    StorefrontAPI.Scalars['String']['input']
-  >;
-}>;
-
-export type CatalogQuery = {
-  products: {
-    nodes: Array<
-      Pick<StorefrontAPI.Product, 'id' | 'handle' | 'title'> & {
-        featuredImage?: StorefrontAPI.Maybe<
-          Pick<
-            StorefrontAPI.Image,
-            'id' | 'altText' | 'url' | 'width' | 'height'
-          >
-        >;
-        priceRange: {
-          minVariantPrice: Pick<
-            StorefrontAPI.MoneyV2,
-            'amount' | 'currencyCode'
-          >;
-          maxVariantPrice: Pick<
-            StorefrontAPI.MoneyV2,
-            'amount' | 'currencyCode'
-          >;
-        };
-      }
-    >;
-    pageInfo: Pick<
-      StorefrontAPI.PageInfo,
-      'hasPreviousPage' | 'hasNextPage' | 'startCursor' | 'endCursor'
     >;
   };
 };
@@ -1181,6 +1181,10 @@ interface GeneratedQueryTypes {
     return: RecommendedProductsQuery;
     variables: RecommendedProductsQueryVariables;
   };
+  '#graphql\n  fragment DemoProduct on Product {\n    id\n    title\n    handle\n    priceRange {\n      minVariantPrice {\n        amount\n        currencyCode\n      }\n    }\n    images(first: 1) {\n      nodes {\n        id\n        url\n        altText\n        width\n        height\n      }\n    }\n  }\n  query DemoProducts ($country: CountryCode, $language: LanguageCode)\n    @inContext(country: $country, language: $language) {\n    products(first: 4, sortKey: UPDATED_AT, reverse: true) {\n      nodes {\n        ...DemoProduct\n      }\n    }\n  }\n': {
+    return: DemoProductsQuery;
+    variables: DemoProductsQueryVariables;
+  };
   '#graphql\n  query Article(\n    $articleHandle: String!\n    $blogHandle: String!\n    $country: CountryCode\n    $language: LanguageCode\n  ) @inContext(language: $language, country: $country) {\n    blog(handle: $blogHandle) {\n      articleByHandle(handle: $articleHandle) {\n        title\n        contentHtml\n        publishedAt\n        author: authorV2 {\n          name\n        }\n        image {\n          id\n          altText\n          url\n          width\n          height\n        }\n        seo {\n          description\n          title\n        }\n      }\n    }\n  }\n': {
     return: ArticleQuery;
     variables: ArticleQueryVariables;
@@ -1200,10 +1204,6 @@ interface GeneratedQueryTypes {
   '#graphql\n  fragment Collection on Collection {\n    id\n    title\n    handle\n    image {\n      id\n      url\n      altText\n      width\n      height\n    }\n  }\n  query StoreCollections(\n    $country: CountryCode\n    $endCursor: String\n    $first: Int\n    $language: LanguageCode\n    $last: Int\n    $startCursor: String\n  ) @inContext(country: $country, language: $language) {\n    collections(\n      first: $first,\n      last: $last,\n      before: $startCursor,\n      after: $endCursor\n    ) {\n      nodes {\n        ...Collection\n      }\n      pageInfo {\n        hasNextPage\n        hasPreviousPage\n        startCursor\n        endCursor\n      }\n    }\n  }\n': {
     return: StoreCollectionsQuery;
     variables: StoreCollectionsQueryVariables;
-  };
-  '#graphql\n  query Catalog(\n    $country: CountryCode\n    $language: LanguageCode\n    $first: Int\n    $last: Int\n    $startCursor: String\n    $endCursor: String\n  ) @inContext(country: $country, language: $language) {\n    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {\n      nodes {\n        ...ProductItem\n      }\n      pageInfo {\n        hasPreviousPage\n        hasNextPage\n        startCursor\n        endCursor\n      }\n    }\n  }\n  #graphql\n  fragment MoneyProductItem on MoneyV2 {\n    amount\n    currencyCode\n  }\n  fragment ProductItem on Product {\n    id\n    handle\n    title\n    featuredImage {\n      id\n      altText\n      url\n      width\n      height\n    }\n    priceRange {\n      minVariantPrice {\n        ...MoneyProductItem\n      }\n      maxVariantPrice {\n        ...MoneyProductItem\n      }\n    }\n  }\n\n': {
-    return: CatalogQuery;
-    variables: CatalogQueryVariables;
   };
   '#graphql\n  query Page(\n    $language: LanguageCode,\n    $country: CountryCode,\n    $handle: String!\n  )\n  @inContext(language: $language, country: $country) {\n    page(handle: $handle) {\n      id\n      title\n      body\n      seo {\n        description\n        title\n      }\n    }\n  }\n': {
     return: PageQuery;

@@ -100,30 +100,22 @@ export default function Product() {
     selectedOrFirstAvailableVariant: selectedVariant,
   });
 
-  const {title, descriptionHtml} = product;
+  const {title, category} = product;
 
   return (
-    <div className="product">
+    <div className="flex flex-col">
       <ProductImage image={selectedVariant?.image} />
       <div className="product-main">
+        <ProductForm
+          productOptions={productOptions}
+          selectedVariant={selectedVariant}
+        />
+        <h3>{category}</h3>
         <h1>{title}</h1>
         <ProductPrice
           price={selectedVariant?.price}
           compareAtPrice={selectedVariant?.compareAtPrice}
         />
-        <br />
-        <ProductForm
-          productOptions={productOptions}
-          selectedVariant={selectedVariant}
-        />
-        <br />
-        <br />
-        <p>
-          <strong>Description</strong>
-        </p>
-        <br />
-        <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
-        <br />
       </div>
       <Analytics.ProductView
         data={{
