@@ -1,5 +1,5 @@
 import {defer} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {Link, useLoaderData} from '@remix-run/react';
 import {
   getSelectedProductOptions,
   Analytics,
@@ -100,24 +100,28 @@ export default function Product() {
     selectedOrFirstAvailableVariant: selectedVariant,
   });
 
-  const {title, category, images} = product;
+  const {title, collections, images} = product;
 
   const selectedVariantsSecondaryImage = images.edges.filter((image) => {
     if (!image.node?.altText) return false;
     return image.node.altText.includes(selectedVariant.title.toLowerCase());
   });
 
-  console.log(selectedVariantsSecondaryImage, selectedVariant.title);
+  const brand = collections.edges[0].node;
 
   return (
     <div className="flex flex-col">
-      <ProductImage image={selectedVariant?.image} />
+      {selectedVariant?.compareAtPrice && <strong>Sale</strong>}
+      <ProductImage
+        image={selectedVariant?.image}
+        secondaryImage={selectedVariantsSecondaryImage[0].node}
+      />
       <div className="product-main">
         <ProductForm
           productOptions={productOptions}
           selectedVariant={selectedVariant}
         />
-        <h3>{category}</h3>
+        <Link to={`/collections/${brand.handle}`}>{brand.title}</Link>
         <h1>{title}</h1>
         <ProductPrice
           price={selectedVariant?.price}
@@ -184,13 +188,12 @@ const PRODUCT_FRAGMENT = `#graphql
   fragment Product on Product {
     id
     title
-    vendor
     handle
     descriptionHtml
     description
     encodedVariantExistence
     encodedVariantAvailability
-    images(first: 10){
+    images(first: 15){
       edges {
         cursor
         node {
@@ -229,6 +232,17 @@ const PRODUCT_FRAGMENT = `#graphql
     seo {
       description
       title
+    }
+    collections(first: 1){
+      edges {
+        cursor
+        node {
+          id
+          title
+          handle
+          onlineStoreUrl
+        }
+      }
     }
   }
   ${PRODUCT_VARIANT_FRAGMENT}
