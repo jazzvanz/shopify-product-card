@@ -1,7 +1,8 @@
 import {defer} from '@shopify/remix-oxygen';
 import {Await, useLoaderData, Link} from '@remix-run/react';
 import {Suspense} from 'react';
-import {Image, Money} from '@shopify/hydrogen';
+import {Image} from '@shopify/hydrogen';
+import {ProductCard} from '~/components/ProductCard';
 
 /**
  * @type {MetaFunction}
@@ -54,16 +55,8 @@ function loadDeferredData({context}) {
       return null;
     });
 
-  const demoProducts = context.storefront
-    .query(DEMO_PRODUCTS_QUERY)
-    .catch((error) => {
-      console.error(error);
-      return null;
-    });
-
   return {
     recommendedProducts,
-    demoProducts,
   };
 }
 
@@ -74,7 +67,6 @@ export default function Homepage() {
     <div className="home">
       <FeaturedCollection collection={data.featuredCollection} />
       <RecommendedProducts products={data.recommendedProducts} />
-      <DemoProducts products={data.demoProducts} />
     </div>
   );
 }
@@ -116,64 +108,10 @@ function RecommendedProducts({products}) {
           {(response) => (
             <div className="recommended-products-grid">
               {response
-                ? response.products.nodes.map((product) => (
-                    <Link
-                      key={product.id}
-                      className="recommended-product"
-                      to={`/products/${product.handle}`}
-                    >
-                      <Image
-                        data={product.images.nodes[0]}
-                        aspectRatio="1/1"
-                        sizes="(min-width: 45em) 20vw, 50vw"
-                      />
-                      <h4>{product.title}</h4>
-                      <small>
-                        <Money data={product.priceRange.minVariantPrice} />
-                      </small>
-                    </Link>
-                  ))
-                : null}
-            </div>
-          )}
-        </Await>
-      </Suspense>
-      <br />
-    </div>
-  );
-}
-
-/**
- * @param {{
- *   products: Promise<DemoProductsQuery | null>;
- * }}
- */
-function DemoProducts({products}) {
-  return (
-    <div className="recommended-products">
-      <h2>Demo Products</h2>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Await resolve={products}>
-          {(response) => (
-            <div className="recommended-products-grid">
-              {response
-                ? response.products.nodes.map((product) => (
-                    <Link
-                      key={product.id}
-                      className="recommended-product"
-                      to={`/products/${product.handle}`}
-                    >
-                      <Image
-                        data={product.images.nodes[0]}
-                        aspectRatio="1/1"
-                        sizes="(min-width: 45em) 20vw, 50vw"
-                      />
-                      <h4>{product.title}</h4>
-                      <small>
-                        <Money data={product.priceRange.minVariantPrice} />
-                      </small>
-                    </Link>
-                  ))
+                ? response.products.nodes.map((product) => {
+                    console.log(product, 'HERE');
+                    return <ProductCard key={product.id} product={product} />;
+                  })
                 : null}
             </div>
           )}
@@ -218,52 +156,70 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
         currencyCode
       }
     }
-    images(first: 1) {
+    images(first: 15) {
       nodes {
         id
         url
         altText
         width
         height
+      }
+    }
+    options {
+      name
+      optionValues {
+        name
+        firstSelectableVariant {
+          compareAtPrice {
+            amount
+            currencyCode
+          }
+          id
+          image {
+            __typename
+            id
+            url
+            altText
+            width
+            height
+          }
+          price {
+            amount
+            currencyCode
+          }
+          product {
+            title
+            handle
+          }
+          selectedOptions {
+            name
+            value
+          }
+          title
+          unitPrice {
+            amount
+            currencyCode
+          }
+        }
+      }
+    }
+    collections(first: 1){
+      edges {
+        cursor
+        node {
+          id
+          title
+          handle
+          onlineStoreUrl
+        }
       }
     }
   }
   query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
     @inContext(country: $country, language: $language) {
-    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
+    products(first: 1, sortKey: UPDATED_AT, reverse: true) {
       nodes {
         ...RecommendedProduct
-      }
-    }
-  }
-`;
-
-const DEMO_PRODUCTS_QUERY = `#graphql
-  fragment DemoProduct on Product {
-    id
-    title
-    handle
-    priceRange {
-      minVariantPrice {
-        amount
-        currencyCode
-      }
-    }
-    images(first: 1) {
-      nodes {
-        id
-        url
-        altText
-        width
-        height
-      }
-    }
-  }
-  query DemoProducts ($country: CountryCode, $language: LanguageCode)
-    @inContext(country: $country, language: $language) {
-    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
-      nodes {
-        ...DemoProduct
       }
     }
   }

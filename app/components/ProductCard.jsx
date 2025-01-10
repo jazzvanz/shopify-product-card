@@ -1,74 +1,60 @@
-import {Link, useLoaderData} from '@remix-run/react';
-import {Image, Money} from '@shopify/hydrogen';
-import {json} from '@shopify/remix-oxygen';
-// import {ProductPrice} from '~/components/ProductPrice';
-// import {ProductImage} from '~/components/ProductImage';
+import {Link} from '@remix-run/react';
+import {
+  // getSelectedProductOptions,
+  useOptimisticVariant,
+  // getProductOptions,
+  getAdjacentAndFirstAvailableVariants,
+  // useSelectedOptionInUrlParam,
+} from '@shopify/hydrogen';
+import {ProductPrice} from '~/components/ProductPrice';
+import {ProductImage} from '~/components/ProductImage';
+// import {ProductForm} from '~/components/ProductForm';
 
-/**
- * @param {LoaderFunctionArgs} args
- */
-export async function loader({context}) {
-  await context.storefront.query(All_PRODUCTS_QUERY);
-  return json({
-    message: 'product message',
-  });
-}
-
-/**
- * @param {ProductCardProps}
- */
 export function ProductCard({product}) {
-  /** @type {LoaderReturnData} */
-  const {message} = useLoaderData();
+  // Optimistically selects a variant with given available variant information
+  const selectedVariant = useOptimisticVariant(
+    product.selectedOrFirstAvailableVariant,
+    getAdjacentAndFirstAvailableVariants(product),
+  );
+
+  // Sets the search param to the selected variant without navigation
+  // only when no search params are set in the url
+  // useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
+
+  // Get the product options array
+  // const productOptions = getProductOptions({
+  //   ...product,
+  //   selectedOrFirstAvailableVariant: selectedVariant,
+  // });
+
+  const {title, collections, images} = product;
+
+  const selectedVariantsSecondaryImage = images.nodes.filter((image) => {
+    if (!image?.altText) return false;
+    return image.altText.includes(selectedVariant.title.toLowerCase());
+  });
+
+  const brand = collections.edges[0].node;
 
   return (
-    <Link className="recommended-product" to={`/products/${product.handle}`}>
-      <Image
-        data={product.images.nodes[0]}
-        aspectRatio="1/1"
-        sizes="(min-width: 45em) 20vw, 50vw"
+    <div className="flex flex-col">
+      {selectedVariant?.compareAtPrice && <strong>Sale</strong>}
+      <ProductImage
+        image={selectedVariant?.image}
+        secondaryImage={selectedVariantsSecondaryImage[0].node}
       />
-      <h4>{product.title}</h4>
-      <h4>{message}</h4>
-      <small>
-        <Money data={product.priceRange.minVariantPrice} />
-        {/* <ProductPrice
+      <div className="product-main">
+        {/* <ProductForm
+          productOptions={productOptions}
+          selectedVariant={selectedVariant}
+        /> */}
+        <Link to={`/collections/${brand.handle}`}>{brand.title}</Link>
+        <h1>{title}</h1>
+        <ProductPrice
           price={selectedVariant?.price}
           compareAtPrice={selectedVariant?.compareAtPrice}
-        /> */}
-      </small>
-    </Link>
+        />
+      </div>
+    </div>
   );
 }
-
-// const PRODUCT_CARD_QUERY = `#graphql
-//   fragment ProductCard on Product {
-//     id
-//     title
-//     vendor
-//     handle
-//     priceRange {
-//       minVariantPrice {
-//         amount
-//         currencyCode
-//       }
-//     }
-//     images(first: 1) {
-//       nodes {
-//         id
-//         url
-//         altText
-//         width
-//         height
-//       }
-//     }
-//   }
-//   query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
-//     @inContext(country: $country, language: $language) {
-//     products(first: 4, sortKey: UPDATED_AT, reverse: true) {
-//       nodes {
-//         ...ProductCard
-//       }
-//     }
-//   }
-// `;

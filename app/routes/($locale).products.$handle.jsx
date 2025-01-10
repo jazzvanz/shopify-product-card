@@ -189,10 +189,6 @@ const PRODUCT_FRAGMENT = `#graphql
     id
     title
     handle
-    descriptionHtml
-    description
-    encodedVariantExistence
-    encodedVariantAvailability
     images(first: 15){
       edges {
         cursor
