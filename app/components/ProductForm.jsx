@@ -14,8 +14,7 @@ export function ProductForm({productOptions, selectedVariant}) {
           <div className="product-options" key={option.name}>
             <div className="product-options-grid">
               {option.optionValues.map((value) => {
-                const {name, variantUriQuery, selected, available, exists} =
-                  value;
+                const {name, variantUriQuery, selected, available, exists} = value;
                 return (
                   <button
                     type="button"
