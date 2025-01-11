@@ -109,7 +109,6 @@ function RecommendedProducts({products}) {
             <div className="recommended-products-grid">
               {response
                 ? response.products.nodes.map((product) => {
-                    console.log(product, 'HERE');
                     return <ProductCard key={product.id} product={product} />;
                   })
                 : null}
@@ -145,11 +144,50 @@ const FEATURED_COLLECTION_QUERY = `#graphql
   }
 `;
 
+const PRODUCT_VARIANT_FRAGMENT = `#graphql
+  fragment ProductVariant on ProductVariant {
+    availableForSale
+    compareAtPrice {
+      amount
+      currencyCode
+    }
+    id
+    image {
+      __typename
+      id
+      url
+      altText
+      width
+      height
+    }
+    price {
+      amount
+      currencyCode
+    }
+    product {
+      title
+      handle
+    }
+    selectedOptions {
+      name
+      value
+    }
+    sku
+    title
+    unitPrice {
+      amount
+      currencyCode
+    }
+  }
+`;
+
 const RECOMMENDED_PRODUCTS_QUERY = `#graphql
   fragment RecommendedProduct on Product {
     id
     title
     handle
+    encodedVariantExistence
+    encodedVariantAvailability
     priceRange {
       minVariantPrice {
         amount
@@ -164,6 +202,12 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
         width
         height
       }
+    }
+    selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
+      ...ProductVariant
+    }
+    adjacentVariants (selectedOptions: $selectedOptions) {
+      ...ProductVariant
     }
     options {
       name
@@ -215,7 +259,10 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
       }
     }
   }
-  query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
+  query RecommendedProducts (
+    $country: CountryCode,
+    $language: LanguageCode
+    $selectedOptions: [SelectedOptionInput!]!)
     @inContext(country: $country, language: $language) {
     products(first: 1, sortKey: UPDATED_AT, reverse: true) {
       nodes {

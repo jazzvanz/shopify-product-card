@@ -110,19 +110,25 @@ export default function Product() {
   const brand = collections.edges[0].node;
 
   return (
-    <div className="flex flex-col">
-      {selectedVariant?.compareAtPrice && <strong>Sale</strong>}
+    <div className="flex flex-col relative">
+      {/* Sale Badge */}
+      {selectedVariant?.compareAtPrice && (
+        <strong className="absolute top-2 left-2 z-10 rounded-full border-red-500 border-2 px-3 py-1 text-red-500">
+          On Sale!
+        </strong>
+      )}
       <ProductImage
         image={selectedVariant?.image}
         secondaryImage={selectedVariantsSecondaryImage[0].node}
       />
-      <div className="product-main">
+      <div className="product-main py-4">
         <ProductForm
           productOptions={productOptions}
           selectedVariant={selectedVariant}
         />
         <Link to={`/collections/${brand.handle}`}>{brand.title}</Link>
         <h1>{title}</h1>
+        {/* Next Price Swap Badge */}
         <ProductPrice
           price={selectedVariant?.price}
           compareAtPrice={selectedVariant?.compareAtPrice}

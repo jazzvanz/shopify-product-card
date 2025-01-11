@@ -1,10 +1,11 @@
 import {Link} from '@remix-run/react';
 import {
-  // getSelectedProductOptions,
+  getSelectedProductOptions,
   useOptimisticVariant,
-  // getProductOptions,
+  getProductOptions,
   getAdjacentAndFirstAvailableVariants,
-  // useSelectedOptionInUrlParam,
+  Image,
+  useSelectedOptionInUrlParam,
 } from '@shopify/hydrogen';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
@@ -19,15 +20,16 @@ export function ProductCard({product}) {
 
   // Sets the search param to the selected variant without navigation
   // only when no search params are set in the url
-  // useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
+  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
 
   // Get the product options array
-  // const productOptions = getProductOptions({
-  //   ...product,
-  //   selectedOrFirstAvailableVariant: selectedVariant,
-  // });
+  const productOptions = getProductOptions({
+    ...product,
+    selectedOrFirstAvailableVariant: selectedVariant,
+  });
 
   const {title, collections, images} = product;
+  console.log(product, selectedVariant, 'hello');
 
   const selectedVariantsSecondaryImage = images.nodes.filter((image) => {
     if (!image?.altText) return false;
@@ -35,26 +37,30 @@ export function ProductCard({product}) {
   });
 
   const brand = collections.edges[0].node;
-
+  // image={selectedVariant?.image}
+  // secondaryImage={selectedVariantsSecondaryImage[0].node}
   return (
     <div className="flex flex-col">
       {selectedVariant?.compareAtPrice && <strong>Sale</strong>}
-  
+
       <div className="product-image relative">
         <Image
-          alt={image.altText || 'Product Image'}
+          alt={selectedVariant?.image.altText || 'Product Image'}
           aspectRatio="1/1"
-          data={image}
-          key={image.id}
+          data={selectedVariant?.image}
+          key={selectedVariant?.image.id}
           sizes="(min-width: 45em) 50vw, 100vw"
           className="hover:opacity-1 absolute top-0 right-0 bottom-0 left-0"
         />
-        {secondaryImage && (
+        {selectedVariantsSecondaryImage[0].node && (
           <Image
-            alt={secondaryImage.altText || 'Secondary Product Image'}
+            alt={
+              selectedVariantsSecondaryImage[0].node.altText ||
+              'Secondary Product Image'
+            }
             aspectRatio="1/1"
-            data={secondaryImage}
-            key={secondaryImage.id}
+            data={selectedVariantsSecondaryImage[0].node}
+            key={selectedVariantsSecondaryImage[0].node.id}
             sizes="(min-width: 45em) 50vw, 100vw"
           />
         )}
