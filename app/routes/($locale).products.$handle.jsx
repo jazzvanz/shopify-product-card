@@ -1,16 +1,13 @@
 import {defer} from '@shopify/remix-oxygen';
-import {Link, useLoaderData} from '@remix-run/react';
+import {useLoaderData} from '@remix-run/react';
 import {
   getSelectedProductOptions,
-  Analytics,
   useOptimisticVariant,
   getProductOptions,
   getAdjacentAndFirstAvailableVariants,
   useSelectedOptionInUrlParam,
 } from '@shopify/hydrogen';
-import {ProductPrice} from '~/components/ProductPrice';
-import {ProductImage} from '~/components/ProductImage';
-import {ProductForm} from '~/components/ProductForm';
+import {ProductCard} from '~/components/ProductCard';
 
 /**
  * @type {MetaFunction<typeof loader>}
@@ -83,72 +80,14 @@ function loadDeferredData({context, params}) {
 export default function Product() {
   /** @type {LoaderReturnData} */
   const {product} = useLoaderData();
-
-  // Optimistically selects a variant with given available variant information
-  const selectedVariant = useOptimisticVariant(
-    product.selectedOrFirstAvailableVariant,
-    getAdjacentAndFirstAvailableVariants(product),
-  );
-
-  // Sets the search param to the selected variant without navigation
-  // only when no search params are set in the url
-  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
-
-  // Get the product options array
-  const productOptions = getProductOptions({
-    ...product,
-    selectedOrFirstAvailableVariant: selectedVariant,
-  });
-
-  const {title, collections, images} = product;
-
-  const selectedVariantsSecondaryImage = images.edges.filter((image) => {
-    if (!image.node?.altText) return false;
-    return image.node.altText.includes(selectedVariant.title.toLowerCase());
-  });
-
-  const brand = collections.edges[0].node;
-
   return (
-    <div className="flex flex-col relative">
-      {/* Sale Badge */}
-      {selectedVariant?.compareAtPrice && (
-        <strong className="absolute top-2 left-2 z-10 rounded-full border-red-500 border-2 px-3 py-1 text-red-500">
-          On Sale!
-        </strong>
-      )}
-      <ProductImage
-        image={selectedVariant?.image}
-        secondaryImage={selectedVariantsSecondaryImage[0].node}
-      />
-      <div className="product-main py-4">
-        <ProductForm
-          productOptions={productOptions}
-          selectedVariant={selectedVariant}
-        />
-        <Link to={`/collections/${brand.handle}`}>{brand.title}</Link>
-        <h1>{title}</h1>
-        {/* Next Price Swap Badge */}
-        <ProductPrice
-          price={selectedVariant?.price}
-          compareAtPrice={selectedVariant?.compareAtPrice}
-        />
+    <div>
+      {/* Column 1 */}
+      <div>
+        <ProductCard key={product.id} product={product} />
       </div>
-      <Analytics.ProductView
-        data={{
-          products: [
-            {
-              id: product.id,
-              title: product.title,
-              price: selectedVariant?.price.amount || '0',
-              vendor: product.vendor,
-              variantId: selectedVariant?.id || '',
-              variantTitle: selectedVariant?.title || '',
-              quantity: 1,
-            },
-          ],
-        }}
-      />
+      {/* Column 2 */}
+      <div>Button</div>
     </div>
   );
 }

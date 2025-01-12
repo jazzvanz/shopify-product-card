@@ -1,15 +1,13 @@
 import {Link} from '@remix-run/react';
 import {
-  getSelectedProductOptions,
-  useOptimisticVariant,
   getProductOptions,
-  getAdjacentAndFirstAvailableVariants,
+  useOptimisticVariant,
   Image,
+  getAdjacentAndFirstAvailableVariants,
   useSelectedOptionInUrlParam,
 } from '@shopify/hydrogen';
+import {ProductForm} from '~/components/ProductForm';
 import {ProductPrice} from '~/components/ProductPrice';
-import {ProductImage} from '~/components/ProductImage';
-// import {ProductForm} from '~/components/ProductForm';
 
 export function ProductCard({product}) {
   // Optimistically selects a variant with given available variant information
@@ -29,20 +27,22 @@ export function ProductCard({product}) {
   });
 
   const {title, collections, images} = product;
-  console.log(product, selectedVariant, 'hello');
 
-  const selectedVariantsSecondaryImage = images.nodes.filter((image) => {
-    if (!image?.altText) return false;
-    return image.altText.includes(selectedVariant.title.toLowerCase());
+  const selectedVariantsSecondaryImage = images.edges.filter((image) => {
+    if (!image.node?.altText) return false;
+    return image.node.altText.includes(selectedVariant.title.toLowerCase());
   });
 
   const brand = collections.edges[0].node;
-  // image={selectedVariant?.image}
-  // secondaryImage={selectedVariantsSecondaryImage[0].node}
-  return (
-    <div className="flex flex-col">
-      {selectedVariant?.compareAtPrice && <strong>Sale</strong>}
 
+  return (
+    <div className="flex flex-col relative">
+      {/* Sale Badge */}
+      {selectedVariant?.compareAtPrice && (
+        <strong className="absolute top-2 left-2 z-10 rounded-full border-red-500 border-2 px-3 py-1 text-red-500">
+          On Sale!
+        </strong>
+      )}
       <div className="product-image relative">
         <Image
           alt={selectedVariant?.image.altText || 'Product Image'}
@@ -65,15 +65,11 @@ export function ProductCard({product}) {
           />
         )}
       </div>
-      <ProductImage
-        image={selectedVariant?.image}
-        secondaryImage={selectedVariantsSecondaryImage[0].node}
-      />
       <div className="product-main">
-        {/* <ProductForm
+        <ProductForm
           productOptions={productOptions}
           selectedVariant={selectedVariant}
-        /> */}
+        />
         <Link to={`/collections/${brand.handle}`}>{brand.title}</Link>
         <h1>{title}</h1>
         <ProductPrice
