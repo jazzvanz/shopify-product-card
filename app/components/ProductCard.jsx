@@ -43,7 +43,7 @@ export function ProductCard({product}) {
           On Sale!
         </strong>
       )}
-      <div className="product-image relative">
+      <div className="product-image relative rounded-md border-1 border-gray-300">
         <Image
           alt={selectedVariant?.image.altText || 'Product Image'}
           aspectRatio="1/1"

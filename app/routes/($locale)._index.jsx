@@ -1,8 +1,7 @@
 import {defer} from '@shopify/remix-oxygen';
 import {Await, useLoaderData, Link} from '@remix-run/react';
 import {Suspense} from 'react';
-import {Image} from '@shopify/hydrogen';
-import {ProductCard} from '~/components/ProductCard';
+import {Image, Money} from '@shopify/hydrogen';
 
 /**
  * @type {MetaFunction}
@@ -108,9 +107,23 @@ function RecommendedProducts({products}) {
           {(response) => (
             <div className="recommended-products-grid">
               {response
-                ? response.products.nodes.map((product) => {
-                    return <ProductCard key={product.id} product={product} />;
-                  })
+                ? response.products.nodes.map((product) => (
+                    <Link
+                      key={product.id}
+                      className="recommended-product"
+                      to={`/products/${product.handle}`}
+                    >
+                      <Image
+                        data={product.images.nodes[0]}
+                        aspectRatio="1/1"
+                        sizes="(min-width: 45em) 20vw, 50vw"
+                      />
+                      <h4>{product.title}</h4>
+                      <small>
+                        <Money data={product.priceRange.minVariantPrice} />
+                      </small>
+                    </Link>
+                  ))
                 : null}
             </div>
           )}
@@ -144,57 +157,18 @@ const FEATURED_COLLECTION_QUERY = `#graphql
   }
 `;
 
-const PRODUCT_VARIANT_FRAGMENT = `#graphql
-  fragment ProductVariant on ProductVariant {
-    availableForSale
-    compareAtPrice {
-      amount
-      currencyCode
-    }
-    id
-    image {
-      __typename
-      id
-      url
-      altText
-      width
-      height
-    }
-    price {
-      amount
-      currencyCode
-    }
-    product {
-      title
-      handle
-    }
-    selectedOptions {
-      name
-      value
-    }
-    sku
-    title
-    unitPrice {
-      amount
-      currencyCode
-    }
-  }
-`;
-
 const RECOMMENDED_PRODUCTS_QUERY = `#graphql
   fragment RecommendedProduct on Product {
     id
     title
     handle
-    encodedVariantExistence
-    encodedVariantAvailability
     priceRange {
       minVariantPrice {
         amount
         currencyCode
       }
     }
-    images(first: 15) {
+    images(first: 1) {
       nodes {
         id
         url
@@ -203,68 +177,12 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
         height
       }
     }
-    selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
-      ...ProductVariant
-    }
-    adjacentVariants (selectedOptions: $selectedOptions) {
-      ...ProductVariant
-    }
-    options {
-      name
-      optionValues {
-        name
-        firstSelectableVariant {
-          compareAtPrice {
-            amount
-            currencyCode
-          }
-          id
-          image {
-            __typename
-            id
-            url
-            altText
-            width
-            height
-          }
-          price {
-            amount
-            currencyCode
-          }
-          product {
-            title
-            handle
-          }
-          selectedOptions {
-            name
-            value
-          }
-          title
-          unitPrice {
-            amount
-            currencyCode
-          }
-        }
-      }
-    }
-    collections(first: 1){
-      edges {
-        cursor
-        node {
-          id
-          title
-          handle
-          onlineStoreUrl
-        }
-      }
-    }
   }
   query RecommendedProducts (
     $country: CountryCode,
     $language: LanguageCode
-    $selectedOptions: [SelectedOptionInput!]!)
     @inContext(country: $country, language: $language) {
-    products(first: 1, sortKey: UPDATED_AT, reverse: true) {
+    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
       nodes {
         ...RecommendedProduct
       }
@@ -276,5 +194,4 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
 /** @template T @typedef {import('@remix-run/react').MetaFunction<T>} MetaFunction */
 /** @typedef {import('storefrontapi.generated').FeaturedCollectionFragment} FeaturedCollectionFragment */
 /** @typedef {import('storefrontapi.generated').RecommendedProductsQuery} RecommendedProductsQuery */
-/** @typedef {import('storefrontapi.generated').DemoProductsQuery} ProductsQuery */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */
