@@ -5,28 +5,25 @@ import {
   Image,
   getAdjacentAndFirstAvailableVariants,
   useSelectedOptionInUrlParam,
+  Money,
 } from '@shopify/hydrogen';
 import {ProductForm} from '~/components/ProductForm';
-import {ProductPrice} from '~/components/ProductPrice';
 
 export function ProductCard({product}) {
-  // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
     product.selectedOrFirstAvailableVariant,
     getAdjacentAndFirstAvailableVariants(product),
   );
 
-  // Sets the search param to the selected variant without navigation
-  // only when no search params are set in the url
   useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
 
-  // Get the product options array
   const productOptions = getProductOptions({
     ...product,
     selectedOrFirstAvailableVariant: selectedVariant,
   });
 
   const {title, collections, images} = product;
+  const {compareAtPrice, price} = selectedVariant;
 
   const selectedVariantsSecondaryImage = images.edges.filter((image) => {
     if (!image.node?.altText) return false;
@@ -37,7 +34,6 @@ export function ProductCard({product}) {
 
   return (
     <div className="flex flex-col relative">
-      {/* Sale Badge */}
       {selectedVariant?.compareAtPrice && (
         <strong className="absolute top-2 left-2 z-10 rounded-full border-red-500 border-2 px-3 py-1 text-red-500">
           On Sale!
@@ -65,17 +61,36 @@ export function ProductCard({product}) {
           />
         )}
       </div>
+
       <div className="product-main">
         <ProductForm
           productOptions={productOptions}
           selectedVariant={selectedVariant}
         />
-        <Link to={`/collections/${brand.handle}`}>{brand.title}</Link>
-        <h1>{title}</h1>
-        <ProductPrice
-          price={selectedVariant?.price}
-          compareAtPrice={selectedVariant?.compareAtPrice}
-        />
+
+        {brand && (
+          <h2 className="py-2">
+            <Link to={`/collections/${brand.handle}`}>{brand.title}</Link>
+          </h2>
+        )}
+
+        <h1 className="py-2">{title}</h1>
+        <div className="flex gap-x-3">
+          {!compareAtPrice && <Money data={price} withoutCurrency="true" />}
+          {compareAtPrice && (
+            <>
+              <s>
+                <Money data={price} withoutCurrency="true" />
+              </s>
+
+              <Money
+                className="text-red-500"
+                data={compareAtPrice}
+                withoutCurrency="true"
+              />
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -3,11 +3,10 @@ import {useLoaderData} from '@remix-run/react';
 import {
   getSelectedProductOptions,
   useOptimisticVariant,
-  getProductOptions,
   getAdjacentAndFirstAvailableVariants,
-  useSelectedOptionInUrlParam,
 } from '@shopify/hydrogen';
 import {ProductCard} from '~/components/ProductCard';
+import {AddToCartButton} from '~/components/AddToCartButton';
 
 /**
  * @type {MetaFunction<typeof loader>}
@@ -80,14 +79,36 @@ function loadDeferredData({context, params}) {
 export default function Product() {
   /** @type {LoaderReturnData} */
   const {product} = useLoaderData();
+
+  const selectedVariant = useOptimisticVariant(
+    product.selectedOrFirstAvailableVariant,
+    getAdjacentAndFirstAvailableVariants(product),
+  );
+
   return (
-    <div>
-      {/* Column 1 */}
-      <div>
+    <div className="flex flex-row">
+      <div className="p-4">
         <ProductCard key={product.id} product={product} />
       </div>
-      {/* Column 2 */}
-      <div>Button</div>
+      <div className="p-4">
+        <AddToCartButton
+          disabled={!selectedVariant || !selectedVariant.availableForSale}
+          onClick={() => console.log(`added to cart ${selectedVariant}`)}
+          lines={
+            selectedVariant
+              ? [
+                  {
+                    merchandiseId: selectedVariant.id,
+                    quantity: 1,
+                    selectedVariant,
+                  },
+                ]
+              : []
+          }
+        >
+          {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
+        </AddToCartButton>
+      </div>
     </div>
   );
 }

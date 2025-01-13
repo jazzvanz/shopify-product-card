@@ -11,10 +11,14 @@ export function ProductForm({productOptions, selectedVariant}) {
     <div className="product-form">
       {productOptions.map((option) => {
         return (
-          <div className="product-options" key={option.name}>
-            <div className="product-options-grid">
+          <div
+            className="flex justify-center content-center py-3"
+            key={option.name}
+          >
+            <div className="flex gap-5">
               {option.optionValues.map((value) => {
-                const {name, variantUriQuery, selected, available, exists} = value;
+                const {name, variantUriQuery, selected, available, exists} =
+                  value;
                 return (
                   <button
                     type="button"
@@ -43,7 +47,6 @@ export function ProductForm({productOptions, selectedVariant}) {
                 );
               })}
             </div>
-            <br />
           </div>
         );
       })}
