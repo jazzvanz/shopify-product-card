@@ -2,15 +2,11 @@ import {defer} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {
   getSelectedProductOptions,
-  Analytics,
   useOptimisticVariant,
-  getProductOptions,
   getAdjacentAndFirstAvailableVariants,
-  useSelectedOptionInUrlParam,
 } from '@shopify/hydrogen';
-import {ProductPrice} from '~/components/ProductPrice';
-import {ProductImage} from '~/components/ProductImage';
-import {ProductForm} from '~/components/ProductForm';
+import {ProductCard} from '~/components/ProductCard';
+import {AddToCartButton} from '~/components/AddToCartButton';
 
 /**
  * @type {MetaFunction<typeof loader>}
@@ -84,62 +80,35 @@ export default function Product() {
   /** @type {LoaderReturnData} */
   const {product} = useLoaderData();
 
-  // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
     product.selectedOrFirstAvailableVariant,
     getAdjacentAndFirstAvailableVariants(product),
   );
 
-  // Sets the search param to the selected variant without navigation
-  // only when no search params are set in the url
-  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
-
-  // Get the product options array
-  const productOptions = getProductOptions({
-    ...product,
-    selectedOrFirstAvailableVariant: selectedVariant,
-  });
-
-  const {title, descriptionHtml} = product;
-
   return (
-    <div className="product">
-      <ProductImage image={selectedVariant?.image} />
-      <div className="product-main">
-        <h1>{title}</h1>
-        <ProductPrice
-          price={selectedVariant?.price}
-          compareAtPrice={selectedVariant?.compareAtPrice}
-        />
-        <br />
-        <ProductForm
-          productOptions={productOptions}
-          selectedVariant={selectedVariant}
-        />
-        <br />
-        <br />
-        <p>
-          <strong>Description</strong>
-        </p>
-        <br />
-        <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
-        <br />
+    <div className="flex flex-row">
+      <div className="p-4">
+        <ProductCard key={product.id} product={product} />
       </div>
-      <Analytics.ProductView
-        data={{
-          products: [
-            {
-              id: product.id,
-              title: product.title,
-              price: selectedVariant?.price.amount || '0',
-              vendor: product.vendor,
-              variantId: selectedVariant?.id || '',
-              variantTitle: selectedVariant?.title || '',
-              quantity: 1,
-            },
-          ],
-        }}
-      />
+      <div className="p-4">
+        <AddToCartButton
+          disabled={!selectedVariant || !selectedVariant.availableForSale}
+          onClick={() => console.log(`added to cart ${selectedVariant}`)}
+          lines={
+            selectedVariant
+              ? [
+                  {
+                    merchandiseId: selectedVariant.id,
+                    quantity: 1,
+                    selectedVariant,
+                  },
+                ]
+              : []
+          }
+        >
+          {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
+        </AddToCartButton>
+      </div>
     </div>
   );
 }
@@ -185,12 +154,22 @@ const PRODUCT_FRAGMENT = `#graphql
   fragment Product on Product {
     id
     title
-    vendor
     handle
-    descriptionHtml
-    description
     encodedVariantExistence
     encodedVariantAvailability
+    images(first: 15){
+      edges {
+        cursor
+        node {
+          __typename
+          id
+          url
+          altText
+          width
+          height
+        }
+      }
+    }
     options {
       name
       optionValues {
@@ -217,6 +196,17 @@ const PRODUCT_FRAGMENT = `#graphql
     seo {
       description
       title
+    }
+    collections(first: 1){
+      edges {
+        cursor
+        node {
+          id
+          title
+          handle
+          onlineStoreUrl
+        }
+      }
     }
   }
   ${PRODUCT_VARIANT_FRAGMENT}
